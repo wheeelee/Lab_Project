@@ -1,0 +1,5 @@
+body {
+ background-color: #2424a3; /* ← темный цвет вместо белого */
+ color: #e0e0e0; /* ← светлый текст */
+ font-family: "Segoe UI", sans-serif; /* ← шрифт */
+}
