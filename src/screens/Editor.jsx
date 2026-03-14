@@ -42,7 +42,7 @@ function Editor({ projects }) {
           viewBox='0 0 24 24'
           fill='none'
           stroke='currentColor'
-          className="w-10 h-10 text-black cursor-pointer m-5"
+          className="w-10 h-10 text-white cursor-pointer m-5"
           strokeWidth="2">
           <circle cx="12" cy="12" r="10"/>
           </svg>
@@ -50,7 +50,7 @@ function Editor({ projects }) {
           viewBox='0 0 24 24'
           fill='none'
           stroke='currentColor'
-          className="w-10 h-10 text-black cursor-pointer  m-5"
+          className="w-10 h-10 text-white cursor-pointer  m-5"
           strokeWidth="2">
           <rect x="3" y="3" width="18" height="18" strokeWidth="2" />
           </svg>
@@ -58,15 +58,14 @@ function Editor({ projects }) {
           viewBox='0 0 24 24'
           fill='none'
           stroke='currentColor'
-          className="w-10 h-10 text-black cursor-pointer  m-5"
+          className="w-10 h-10 text-white cursor-pointer  m-5"
           strokeWidth="2">
           <path d="M12 3L21 20H3L12 3Z" strokeWidth="2" />
           </svg>
         </aside>
         <main className="flex-1 bg-white p-10">
-           {/* <h1>Холст проекта: {project.name}</h1> */}
         </main>
-        <aside className="w-64 border-l bg-slate-700"> {/* Свойства */} </aside>
+        <aside className="w-64 border-l bg-slate-700"> </aside>
       </div>
     </div>
   );
