@@ -42,8 +42,14 @@ export const mat3 = {
         ];
     },
     rotate(rad: number): Mat3 {
-        // TODO: используйте Math.cos, Math.sin
-        throw new Error("Not implemented");
+        const c = Math.cos(rad);
+        const s = Math.sin(rad);
+        return [
+            c,-s,0,
+            s,c,0,
+            0,0,1
+        ];
+        //throw new Error("Not implemented");
     },
     fromTransform(
         tx: number,
@@ -53,14 +59,40 @@ export const mat3 = {
         sy: number
     ): Mat3 {
         // TODO: собрать M = T * R * S
-        throw new Error("Not implemented");
+        const t = mat3.translate(tx, ty);
+        const r = mat3.rotate(rotationRad);
+        const s = mat3.scale(sx, sy);
+        const rs = mat3.multiply(r,s);
+        return mat3.multiply(t,rs);
+        //throw new Error("Not implemented");
     },
     transformPoint(m: Mat3, x: number, y: number): Point2D {
         // TODO: вернуть {x:..., y:...}
-        throw new Error("Not implemented");
+        return {
+            x: m[0] * x + m[1] * y + m[2],
+            y: m[3] * x + m[4] * y + m[5],
+        };
+        //throw new Error("Not implemented");
     },
     invert(m: Mat3): Mat3 | null {
         // TODO: инверсия для аффинной матрицы (нижняя строка 0,0,1)
-        throw new Error("Not implemented");
+        const a = m[0], b = m[1], tx = m[2];
+        const c = m[3], d = m[4], ty = m[5];
+        const det = a * d - b * c;
+        if (Math.abs(det) < EPS) {
+            return null;
+        }
+        
+        const invDet = 1.0 / det;
+        
+        return [
+            d * invDet,
+            -b * invDet,
+            (b * ty - d * tx) * invDet,
+            -c * invDet,
+            a * invDet,
+            (c * tx - a * ty) * invDet,
+            0,0,1
+        ];
     }
 };
