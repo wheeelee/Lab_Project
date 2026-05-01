@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
-import Gallery from './screens/Gallery.jsx';
-import Editor from './screens/Editor.jsx';
+import Gallery from './screens/Gallery';
+import Editor from './screens/Editor';
 import { motion } from "framer-motion";
 
 function App() {
@@ -9,15 +9,15 @@ function App() {
     { id: 1, name: 'Новый проект', date: new Date().toLocaleDateString('ru-RU') },
   ]);
 
-  const addProject = () => {
-    const newProject = {
-      id: Date.now(),
-      name: 'Новый проект',
-      date: new Date().toLocaleDateString('ru-RU')
-    };
-
-    setProjects(prev => [...prev, newProject]);
+  const addProject = (name) => {
+  const newProject = {
+    id: Date.now(),
+    name: name, // ← теперь используем input
+    date: new Date().toLocaleDateString('ru-RU')
   };
+
+  setProjects(prev => [...prev, newProject]);
+};
 
   return (
     <BrowserRouter>

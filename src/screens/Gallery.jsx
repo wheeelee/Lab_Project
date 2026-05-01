@@ -1,7 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 function Gallery({ projects, addProject }) {
+  const [name, setName] = useState("");
+
   return (
     <div>
       <div className="flex justify-between items-center pr-8">
@@ -12,18 +15,30 @@ function Gallery({ projects, addProject }) {
         >
           Галерея проектов
         </motion.div>
-        
-        <motion.button
-          whileHover={{ scale: 1.1, backgroundColor: "#3b82f6" }}
-          transition={{ type: "tween", stiffness: 100 }}
-          whileTap={{ scale: 1 }}
-          onClick={addProject}
-          className="flex items-center justify-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-4"
-        >
-          Создать проект
-        </motion.button>
+
+        <div className="flex gap-2 items-center">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Название проекта"
+            className="border px-2 py-1 rounded"
+          />
+
+          <motion.button
+            whileHover={{ scale: 1.1, backgroundColor: "#3b82f6" }}
+            whileTap={{ scale: 1 }}
+            onClick={() => {
+              if (!name.trim()) return;
+              addProject(name.trim());
+              setName("");
+            }}
+            className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
+          >
+            Создать проект
+          </motion.button>
+        </div>
       </div>
-      
+
       <div className="grid gap-4 justify-center items-left">
         <AnimatePresence>
           {projects.map(project => (
