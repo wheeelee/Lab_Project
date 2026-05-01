@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest",
-    "test:run": "vitest run" 
+    "test:run": "vitest run",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,md,json,html}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,scss,md,json,html}\""
+
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
@@ -28,6 +31,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "prettier": "3.8.3",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vitest": "^4.1.0"
