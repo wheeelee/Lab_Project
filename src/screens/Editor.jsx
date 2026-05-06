@@ -3,7 +3,6 @@ import React, { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import CanvasScene from "./CanvasScene";
 
-// фигуры
 import { Rect } from "../lib/shapes/Rect";
 import { Oval } from "../lib/shapes/Oval";
 import { Triangle } from "../lib/shapes/Triangle";
@@ -35,7 +34,7 @@ function Editor({ projects }) {
     oval.transform.x = 650;
     oval.transform.y = 100;
     oval.fillStyle = "#fbbf24";
-    oval.fillOpacity = 0.65;
+    oval.fillOpacity = 0.8;
 
     const triangle = new Triangle(0, -70, 80, 70, -80, 70);
     triangle.transform.x = 180;

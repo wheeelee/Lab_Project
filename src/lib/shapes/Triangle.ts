@@ -2,34 +2,53 @@ import { Shape } from "./Shape";
 import { Bounds } from "../math/Bounds";
 import { RasterRenderer } from "../raster/RasterRenderer";
 
+type Pt = { x: number; y: number };
+
 export class Triangle extends Shape {
+  private a: Pt;
+  private b: Pt;
+  private c: Pt;
+
   constructor(
-    public ax = 0, public ay = -50,
-    public bx = 50, public by = 50,
-    public cx = -50, public cy = 50
+    ax: number, ay: number,
+    bx: number, by: number,
+    cx: number, cy: number
   ) {
     super();
+
+    const centerX = (ax + bx + cx) / 3;
+    const centerY = (ay + by + cy) / 3;
+
+    this.transform.x = centerX;
+    this.transform.y = centerY;
+
+    this.a = { x: ax - centerX, y: ay - centerY };
+    this.b = { x: bx - centerX, y: by - centerY };
+    this.c = { x: cx - centerX, y: cy - centerY };
   }
 
-  private getPts() {
-    return [
-      this.transformPointToDevice(this.ax, this.ay),
-      this.transformPointToDevice(this.bx, this.by),
-      this.transformPointToDevice(this.cx, this.cy),
-    ];
+  private localPts(): Pt[] {
+    return [this.a, this.b, this.c];
+  }
+
+  private devicePts(): Pt[] {
+    return this.localPts().map(p =>
+      this.transformPointToDevice(p.x, p.y)
+    );
   }
 
   getLocalBounds(): Bounds {
+    const pts = this.localPts();
     return {
-      minX: Math.min(this.ax, this.bx, this.cx),
-      minY: Math.min(this.ay, this.by, this.cy),
-      maxX: Math.max(this.ax, this.bx, this.cx),
-      maxY: Math.max(this.ay, this.by, this.cy),
+      minX: Math.min(...pts.map(p => p.x)),
+      minY: Math.min(...pts.map(p => p.y)),
+      maxX: Math.max(...pts.map(p => p.x)),
+      maxY: Math.max(...pts.map(p => p.y)),
     };
   }
 
   getBounds(): Bounds {
-    const pts = this.getPts();
+    const pts = this.devicePts();
     return {
       minX: Math.min(...pts.map(p => p.x)),
       minY: Math.min(...pts.map(p => p.y)),
@@ -40,22 +59,44 @@ export class Triangle extends Shape {
 
   hitTest(px: number, py: number): boolean {
     const p = this.transformPointToLocal(px, py);
-    const area = (x1:number,y1:number,x2:number,y2:number,x3:number,y3:number)=>
-      Math.abs((x2-x1)*(y3-y1)-(x3-x1)*(y2-y1));
 
-    const A = area(this.ax,this.ay,this.bx,this.by,this.cx,this.cy);
-    const A1 = area(p.x,p.y,this.bx,this.by,this.cx,this.cy);
-    const A2 = area(this.ax,this.ay,p.x,p.y,this.cx,this.cy);
-    const A3 = area(this.ax,this.ay,this.bx,this.by,p.x,p.y);
+    const sign = (p1: Pt, p2: Pt, p3: Pt) =>
+      (p1.x - p3.x) * (p2.y - p3.y) -
+      (p2.x - p3.x) * (p1.y - p3.y);
 
-    return Math.abs(A - (A1 + A2 + A3)) < 0.5;
+    const b1 = sign(p, this.a, this.b) < 0;
+    const b2 = sign(p, this.b, this.c) < 0;
+    const b3 = sign(p, this.c, this.a) < 0;
+
+    return (b1 === b2) && (b2 === b3);
   }
 
   drawRaster(r: RasterRenderer) {
-    this.drawPolygon(r, this.getPts());
+    this.drawPolygon(r, this.devicePts());
+  }
+
+  clone(): Triangle {
+    const toAbs = (p: Pt) => ({
+      x: p.x + this.transform.x,
+      y: p.y + this.transform.y,
+    });
+
+    const A = toAbs(this.a);
+    const B = toAbs(this.b);
+    const C = toAbs(this.c);
+
+    const t = new Triangle(A.x, A.y, B.x, B.y, C.x, C.y);
+    t.transform = { ...this.transform, toMatrix: this.transform.toMatrix.bind(this.transform) };
+    return t;
   }
 
   toJSON() {
-    return { type: "Triangle", ax: this.ax, ay: this.ay, bx: this.bx, by: this.by, cx: this.cx, cy: this.cy, transform: this.transform };
+    return {
+      type: "Triangle",
+      a: this.a,
+      b: this.b,
+      c: this.c,
+      transform: this.transform,
+    };
   }
 }
