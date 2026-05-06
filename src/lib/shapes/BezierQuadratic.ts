@@ -14,7 +14,6 @@ export class BezierQuadratic extends Shape {
     super();
   }
 
-  // --- локальные границы ---
   getLocalBounds(): Bounds {
     const pts = this.getCurvePoints(20);
 
@@ -26,7 +25,6 @@ export class BezierQuadratic extends Shape {
     };
   }
 
-  // --- экранные границы ---
   getBounds(): Bounds {
     const pts = this.getCurvePoints(20).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -40,7 +38,6 @@ export class BezierQuadratic extends Shape {
     };
   }
 
-  // --- hit test (приближённый через точки) ---
   hitTest(px: number, py: number): boolean {
     const p = this.transformPointToLocal(px, py);
     const pts = this.getCurvePoints(30);
@@ -60,7 +57,6 @@ export class BezierQuadratic extends Shape {
     return false;
   }
 
-  // --- отрисовка ---
   drawRaster(r: RasterRenderer) {
     const pts = this.getCurvePoints(40).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -74,7 +70,6 @@ export class BezierQuadratic extends Shape {
 }
   }
 
-  // --- bezier генерация ---
   private getCurvePoints(steps: number) {
     const pts: { x: number; y: number }[] = [];
 
@@ -97,7 +92,6 @@ export class BezierQuadratic extends Shape {
     return pts;
   }
 
-  // --- расстояние от точки до отрезка ---
   private distancePointToSegment(
     px: number, py: number,
     x1: number, y1: number,
@@ -122,7 +116,6 @@ export class BezierQuadratic extends Shape {
     return Math.hypot(px - cx, py - cy);
   }
 
-  // --- JSON ---
   toJSON() {
     return {
       type: "BezierQuadratic",

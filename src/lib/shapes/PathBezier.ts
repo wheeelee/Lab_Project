@@ -15,9 +15,7 @@ export class PathBezier extends Shape {
     super();
   }
 
-  // -----------------------
-  // Control points API
-  // -----------------------
+
   getControlPoints(): Point[] {
     return this.points.map(p => ({ ...p }));
   }
@@ -40,9 +38,7 @@ export class PathBezier extends Shape {
     this.points.splice(index, 1);
   }
 
-  // -----------------------
-  // Catmull-Rom → Bezier (минимальная реализация)
-  // -----------------------
+
   private catmullToBezier(stepsPerSeg = 20): Point[] {
     const pts: Point[] = this.points;
     if (pts.length < 2) return [];
@@ -88,9 +84,7 @@ export class PathBezier extends Shape {
     return result;
   }
 
-  // -----------------------
-  // Flatten (главный метод аппроксимации)
-  // -----------------------
+
   private flatten(steps = 25): Point[] {
     if (this.points.length === 0) return [];
 
@@ -105,9 +99,7 @@ export class PathBezier extends Shape {
     return this.points;
   }
 
-  // -----------------------
-  // Bounds (local)
-  // -----------------------
+
   getLocalBounds(): Bounds {
     const pts = this.flatten(25);
 
@@ -119,9 +111,7 @@ export class PathBezier extends Shape {
     };
   }
 
-  // -----------------------
-  // Bounds (device)
-  // -----------------------
+
   getBounds(): Bounds {
     const pts = this.flatten(25).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -135,9 +125,6 @@ export class PathBezier extends Shape {
     };
   }
 
-  // -----------------------
-  // HitTest (distance to segments)
-  // -----------------------
   hitTest(px: number, py: number): boolean {
     const p = this.transformPointToLocal(px, py);
     const pts = this.flatten(30);
@@ -154,7 +141,6 @@ export class PathBezier extends Shape {
       if (d <= threshold) return true;
     }
 
-    // closed path closing segment
     if (this.closed && pts.length > 2) {
       const a = pts[pts.length - 1];
       const b = pts[0];
@@ -171,9 +157,6 @@ export class PathBezier extends Shape {
     return false;
   }
 
-  // -----------------------
-  // Raster rendering
-  // -----------------------
   drawRaster(r: RasterRenderer) {
     const pts = this.flatten(40).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -196,9 +179,6 @@ export class PathBezier extends Shape {
     }
   }
 
-  // -----------------------
-  // Geometry helper
-  // -----------------------
   private distancePointToSegment(
     px: number, py: number,
     x1: number, y1: number,
@@ -223,9 +203,6 @@ export class PathBezier extends Shape {
     return Math.hypot(px - cx, py - cy);
   }
 
-  // -----------------------
-  // Serialization
-  // -----------------------
   toJSON() {
     return {
       type: "PathBezier",

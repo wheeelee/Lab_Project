@@ -16,9 +16,6 @@ export class BezierCubic extends Shape {
     super();
   }
 
-  // -----------------------
-  // Bezier evaluation
-  // -----------------------
   private getCurvePoints(steps: number) {
     const pts: { x: number; y: number }[] = [];
 
@@ -27,7 +24,6 @@ export class BezierCubic extends Shape {
 
       const mt = 1 - t;
 
-      // Cubic Bezier formula:
       const x =
         mt * mt * mt * this.x1 +
         3 * mt * mt * t * this.cx1 +
@@ -46,9 +42,7 @@ export class BezierCubic extends Shape {
     return pts;
   }
 
-  // -----------------------
-  // Bounds (local)
-  // -----------------------
+
   getLocalBounds(): Bounds {
     const pts = this.getCurvePoints(25);
 
@@ -60,9 +54,6 @@ export class BezierCubic extends Shape {
     };
   }
 
-  // -----------------------
-  // Bounds (device)
-  // -----------------------
   getBounds(): Bounds {
     const pts = this.getCurvePoints(25).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -76,9 +67,6 @@ export class BezierCubic extends Shape {
     };
   }
 
-  // -----------------------
-  // Hit test (polyline distance)
-  // -----------------------
   hitTest(px: number, py: number): boolean {
     const p = this.transformPointToLocal(px, py);
     const pts = this.getCurvePoints(30);
@@ -98,9 +86,6 @@ export class BezierCubic extends Shape {
     return false;
   }
 
-  // -----------------------
-  // Render
-  // -----------------------
   drawRaster(r: RasterRenderer) {
     const pts = this.getCurvePoints(40).map(p =>
       this.transformPointToDevice(p.x, p.y)
@@ -114,9 +99,7 @@ export class BezierCubic extends Shape {
 }
   }
 
-  // -----------------------
-  // Helpers
-  // -----------------------
+
   private distancePointToSegment(
     px: number, py: number,
     x1: number, y1: number,
@@ -141,9 +124,7 @@ export class BezierCubic extends Shape {
     return Math.hypot(px - cx, py - cy);
   }
 
-  // -----------------------
-  // Serialization
-  // -----------------------
+
   toJSON() {
     return {
       type: "BezierCubic",

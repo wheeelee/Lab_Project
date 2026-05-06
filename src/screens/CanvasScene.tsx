@@ -13,7 +13,6 @@ const CanvasScene = ({ lineAlg, shapes }: CanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<RasterRenderer | null>(null);
 
-  // смена алгоритма линий
   useEffect(() => {
     if (rendererRef.current) {
       rendererRef.current.setLineAlgorithm(lineAlg);
@@ -42,7 +41,6 @@ const CanvasScene = ({ lineAlg, shapes }: CanvasSceneProps) => {
 
       r.beginFrame(true);
 
-      // ВАЖНО: реальный рендер фигур сцены
       for (const shape of shapes) {
         shape.drawRaster(r);
       }
