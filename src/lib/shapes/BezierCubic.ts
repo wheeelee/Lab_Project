@@ -41,7 +41,9 @@ export class BezierCubic extends Shape {
 
     return pts;
   }
-
+  // отрезок от 0 до 1 делим на шаги
+  // считаем x(t) и y(t) по формуле безье
+  // массив ломаной
 
   getLocalBounds(): Bounds {
     const pts = this.getCurvePoints(25);
@@ -51,10 +53,13 @@ export class BezierCubic extends Shape {
       minY: Math.min(...pts.map(p => p.y)),
       maxX: Math.max(...pts.map(p => p.x)),
       maxY: Math.max(...pts.map(p => p.y)),
+      // превращает массив координат в список аргументов
+      // spread operator - разворачивает массив в аргументы функции
     };
   }
 
   getBounds(): Bounds {
+    // где считаем глобальные границы
     const pts = this.getCurvePoints(25).map(p =>
       this.transformPointToDevice(p.x, p.y)
     );
@@ -68,6 +73,7 @@ export class BezierCubic extends Shape {
   }
 
   hitTest(px: number, py: number): boolean {
+    // это проверка попадания 
     const p = this.transformPointToLocal(px, py);
     const pts = this.getCurvePoints(30);
 

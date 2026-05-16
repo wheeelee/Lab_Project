@@ -48,9 +48,9 @@ function Gallery({ projects, addProject }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               whileHover={{ scale: 0.95 }}
-              whileTap={{ scale: 0.7 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ type: "tween", duration: 0.3 }}
-              className="border rounded p-4 hover:border-blue-400 w-screen flex-row gap-4 justify-left"
+              className="border rounded p-4 hover:border-blue-400 border-white w-screen flex-row gap-4 justify-left"
             >
               <Link to={`/editor/${project.id}`} className="block">
                 <h3 className="text-xl">{project.name}</h3>
