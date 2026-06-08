@@ -90,6 +90,27 @@ function Editor({ projects }) {
     path.fillStyle = "#22c55e33";
     path.fillOpacity = 0.3;
 
+    // ИЗМЕНЕННАЯ ФИГУРА С КАРТИНКИ
+    const tripleLobed = new PathBezier(
+      [
+        { x: -290, y: -10 },    // 1. Старт из левого закругления горизонтальной линии
+
+        { x: -200, y: -80 },   // 5. Control: направляем линию почти вертикально вниз
+                { x: -250, y: -80 },   // 5. Control: направляем линию почти вертикально вниз
+
+        { x: 100, y: 150 },   // 8. Control: вытягиваем нижнюю петлю вправо-вверх
+        { x: 20, y: -90 },    // 9. Control: создаем верхний «горб» перед уходом вправо
+        { x: 180, y: 15 },    // 11. Control: делаем резкий разворот обратно влево
+      ],
+      "catmull",
+      true
+    );
+    tripleLobed.transform.x = 500;
+    tripleLobed.transform.y = 250;
+    tripleLobed.strokeStyle = "#ec4899";
+    tripleLobed.strokeWidth = 2;
+    tripleLobed.fillStyle = "#ec489922";
+    tripleLobed.fillOpacity = 0.2;
 
     return [
       rect,
@@ -100,6 +121,7 @@ function Editor({ projects }) {
       line2,
       cubic,
       path,
+      tripleLobed,
     ];
   }, []);
 

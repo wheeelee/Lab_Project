@@ -98,11 +98,8 @@ export class BezierCubic extends Shape {
     );
 
     for (let i = 0; i < pts.length - 1; i++) {
-  this.drawLine(r,
-    this.transformPointToDevice(pts[i].x, pts[i].y),
-    this.transformPointToDevice(pts[i + 1].x, pts[i + 1].y)
-  );
-}
+      this.drawLine(r, pts[i], pts[i + 1]);
+    }
   }
 
 
@@ -130,6 +127,25 @@ export class BezierCubic extends Shape {
     return Math.hypot(px - cx, py - cy);
   }
 
+
+  clone(): BezierCubic {
+    const cloned = new BezierCubic(
+      this.x1,
+      this.y1,
+      this.cx1,
+      this.cy1,
+      this.cx2,
+      this.cy2,
+      this.x2,
+      this.y2
+    );
+    cloned.transform = { ...this.transform, toMatrix: this.transform.toMatrix.bind(this.transform) };
+    cloned.strokeStyle = this.strokeStyle;
+    cloned.strokeWidth = this.strokeWidth;
+    cloned.fillStyle = this.fillStyle;
+    cloned.fillOpacity = this.fillOpacity;
+    return cloned;
+  }
 
   toJSON() {
     return {

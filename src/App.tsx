@@ -1,40 +1,35 @@
 import { useState } from 'react';
-import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
-import Gallery from './screens/Gallery';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Editor from './screens/Editor';
-import { motion } from "framer-motion";
+import Gallery from './screens/Gallery';
+
+interface Project {
+  id: number;
+  name: string;
+  date: string;
+}
 
 function App() {
-  const [projects, setProjects] = useState([
+  const [projects, setProjects] = useState<Project[]>([
     { id: 1, name: 'Новый проект', date: new Date().toLocaleDateString('ru-RU') },
   ]);
 
-  const addProject = (name) => {
-  const newProject = {
-    id: Date.now(),
-    name: name, // ← теперь используем input
-    date: new Date().toLocaleDateString('ru-RU')
-  };
+  const addProject = (name: string) => {
+    const newProject: Project = {
+      id: Date.now(),
+      name: name,
+      date: new Date().toLocaleDateString('ru-RU')
+    };
 
-  setProjects(prev => [...prev, newProject]);
-};
+    setProjects(prev => [...prev, newProject]);
+  };
 
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-slate-950 text-white">
-        <h2 className="text-white text-6xl hover:text-blue-400 transition pt-5 flex items-center justify-center">
-          Приложение с проектами
-        </h2>
-
-        <header className="p-4 border-b border-slate-800 flex gap-10 text-4xl">
-          <Link to="/" className="hover:text-blue-400 transition">Gallery</Link>
-          <Link to="/editor/1" className="hover:text-blue-400 transition">Editor</Link>
+        <header className="p-4 border-b border-slate-800">
+          <h1 className="text-4xl font-bold text-center">Графический редактор</h1>
         </header>
-
-        <div className='flex justify-center'>
-          
-        </div>
-
         <main className="p-4">
           <Routes>
             <Route path="/" element={<Gallery projects={projects} addProject={addProject} />} />
