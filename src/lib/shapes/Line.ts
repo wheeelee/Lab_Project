@@ -34,6 +34,7 @@ export class Line extends Shape {
   }
 
   hitTest(px: number, py: number): boolean {
+    // Преобразуем в локальные координаты линии
     const p = this.transformPointToLocal(px, py);
 
     const dx = this.x2 - this.x1;
@@ -52,7 +53,9 @@ export class Line extends Shape {
 
     const dist = Math.hypot(p.x - cx, p.y - cy);
 
-    return dist <= this.strokeWidth;
+    // Учитываем strokeWidth с учётом scale transform'а
+    const scale = Math.max(Math.abs(this.transform.scaleX), Math.abs(this.transform.scaleY));
+    return dist <= (this.strokeWidth / 2) * scale + 4; // +4 для удобства попадания
   }
 
   drawRaster(r: RasterRenderer) {

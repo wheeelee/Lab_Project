@@ -1,6 +1,7 @@
 import { Shape } from "../shapes/Shape";
 import { Rect } from "../shapes/Rect";
 import { Oval } from "../shapes/Oval";
+import { Line } from "../shapes/Line";
 import { BezierQuadratic } from "../shapes/BezierQuadratic";
 import { BezierCubic } from "../shapes/BezierCubic";
 import { RasterRenderer, hexToRGBA } from "../raster/RasterRenderer";
@@ -205,32 +206,81 @@ export function applyResize(
   const newCx = (newMinX + newMaxX) / 2;
   const newCy = (newMinY + newMaxY) / 2;
 
-  const deltaLocal = { x: newCx - oldCx, y: newCy - oldCy };
-  const rot = startShapeData.rotation ?? shape.transform.rotation;
-  const cos = Math.cos(rot);
-  const sin = Math.sin(rot);
-  const deltaDevice = {
-    x: deltaLocal.x * cos - deltaLocal.y * sin,
-    y: deltaLocal.x * sin + deltaLocal.y * cos,
-  };
-
-  shape.transform.x = (startShapeData.tx ?? shape.transform.x) + deltaDevice.x;
-  shape.transform.y = (startShapeData.ty ?? shape.transform.y) + deltaDevice.y;
-
   const newW = newMaxX - newMinX;
   const newH = newMaxY - newMinY;
   const oldW = maxX - minX;
   const oldH = maxY - minY;
 
+  if (shape instanceof Line) {
+    // Для линии: масштабируем точки и НЕ трогаем transform
+    const sx = oldW > 0 ? newW / oldW : 1;
+    const sy = oldH > 0 ? newH / oldH : 1;
+    
+    // Восстанавливаем начальные точки
+    if (startShapeData.x1 !== undefined) shape.x1 = startShapeData.x1;
+    if (startShapeData.y1 !== undefined) shape.y1 = startShapeData.y1;
+    if (startShapeData.x2 !== undefined) shape.x2 = startShapeData.x2;
+    if (startShapeData.y2 !== undefined) shape.y2 = startShapeData.y2;
+    
+    // Масштабируем относительно СТАРОГО центра
+    shape.x1 = oldCx + (shape.x1 - oldCx) * sx;
+    shape.y1 = oldCy + (shape.y1 - oldCy) * sy;
+    shape.x2 = oldCx + (shape.x2 - oldCx) * sx;
+    shape.y2 = oldCy + (shape.y2 - oldCy) * sy;
+    
+    // Корректируем transform с учётом смещения центра
+    const deltaLocalX = newCx - oldCx;
+    const deltaLocalY = newCy - oldCy;
+    
+    // Поворачиваем смещение в device space
+    const rot = startShapeData.rotation ?? shape.transform.rotation;
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+    const deltaDeviceX = deltaLocalX * cos - deltaLocalY * sin;
+    const deltaDeviceY = deltaLocalX * sin + deltaLocalY * cos;
+    
+    shape.transform.x = (startShapeData.tx ?? shape.transform.x) + deltaDeviceX;
+    shape.transform.y = (startShapeData.ty ?? shape.transform.y) + deltaDeviceY;
+    
+    // Не трогаем rotation и scale
+    return;
+  }
+
   if (shape instanceof Rect) {
     shape.w = newW;
     shape.h = newH;
+
+    const rot = startShapeData.rotation ?? shape.transform.rotation;
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+    const deltaLocal = { x: newCx - oldCx, y: newCy - oldCy };
+    const deltaDevice = {
+      x: deltaLocal.x * cos - deltaLocal.y * sin,
+      y: deltaLocal.x * sin + deltaLocal.y * cos
+    };
+
+    shape.transform.x = (startShapeData.tx ?? shape.transform.x) + deltaDevice.x;
+    shape.transform.y = (startShapeData.ty ?? shape.transform.y) + deltaDevice.y;
   } else if (shape instanceof Oval) {
     shape.rx = newW / 2;
     shape.ry = newH / 2;
+
+    const rot = startShapeData.rotation ?? shape.transform.rotation;
+    const cos = Math.cos(rot);
+    const sin = Math.sin(rot);
+    const deltaLocal = { x: newCx - oldCx, y: newCy - oldCy };
+    const deltaDevice = {
+      x: deltaLocal.x * cos - deltaLocal.y * sin,
+      y: deltaLocal.x * sin + deltaLocal.y * cos
+    };
+
+    shape.transform.x = (startShapeData.tx ?? shape.transform.x) + deltaDevice.x;
+    shape.transform.y = (startShapeData.ty ?? shape.transform.y) + deltaDevice.y;
   } else {
+    // Для кривых: применяем scale к transform
     const sx = oldW > 0 ? newW / oldW : 1;
     const sy = oldH > 0 ? newH / oldH : 1;
+    
     shape.transform.scaleX = (startShapeData.scaleX ?? 1) * sx;
     shape.transform.scaleY = (startShapeData.scaleY ?? 1) * sy;
   }

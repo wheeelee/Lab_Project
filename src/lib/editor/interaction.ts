@@ -27,6 +27,11 @@ export interface EditorCallbacks {
   getShapes: () => Shape[];
 }
 
+function snapAngle(angle: number, snapStepDeg: number = 15): number {
+  const step = (snapStepDeg * Math.PI) / 180;
+  return Math.round(angle / step) * step;
+}
+
 export class EditorInteraction {
   private session: DragSession | null = null;
   private hoveredTarget: HitTarget = { kind: "none" };
@@ -204,15 +209,26 @@ export class EditorInteraction {
     }
 
     if (session.mode === "rotate") {
+      // Центр поворота — позиция фигуры в устройстве
       const cx = session.startTransform.x;
       const cy = session.startTransform.y;
+
+      // Начальный угол от центра до указателя
       const a0 = Math.atan2(
         session.startPointer.y - cy,
         session.startPointer.x - cx
       );
+      // Текущий угол от центра до указателя
       const a1 = Math.atan2(pt.y - cy, pt.x - cx);
-      shape.transform.rotation =
-        session.startTransform.rotation + (a1 - a0);
+
+      // Вычисляем новый абсолютный угол поворота
+      let newRotation = session.startTransform.rotation + (a1 - a0);
+
+      // Прилипание к сетке углов (шаг 15 градусов)
+      newRotation = snapAngle(newRotation, 15);
+
+      // Применяем поворот
+      shape.transform.rotation = newRotation;
       return;
     }
 
