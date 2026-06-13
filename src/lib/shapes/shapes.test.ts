@@ -6,6 +6,7 @@ import { PathBezier } from "./PathBezier";
 import { Rect } from "./Rect";
 import { Oval } from "./Oval";
 import { Line } from "./Line";
+import { shapeFromJSON } from "./shapeFromJSON";
 
 describe("Shapes - Hit Testing", () => {
   it("Triangle: point inside", () => {
@@ -253,18 +254,40 @@ describe("Shapes - Serialization", () => {
     const tri = new Triangle(0, -50, 50, 50, -50, 50);
     const json = tri.toJSON();
 
-    expect(json.type).toBe("Triangle");
+    expect(json.type).toBe("triangle");
     expect(json.a).toBeDefined();
     expect(json.b).toBeDefined();
     expect(json.c).toBeDefined();
-    expect(json.transform).toBeDefined();
+    expect(json).toHaveProperty("transform");
+  });
+
+  it("QuadraticBezier: pivot at bounds center after recenterOrigin", () => {
+    const curve = new BezierQuadratic(-80, 0, 0, -100, 80, 0);
+    curve.transform.x = 200;
+    curve.transform.y = 150;
+
+    const bBefore = curve.getLocalBounds();
+    const deviceCenterBefore = curve.transformPointToDevice(
+      (bBefore.minX + bBefore.maxX) / 2,
+      (bBefore.minY + bBefore.maxY) / 2
+    );
+
+    curve.recenterOrigin();
+
+    const b = curve.getLocalBounds();
+    expect(Math.abs((b.minX + b.maxX) / 2)).toBeLessThan(1e-6);
+    expect(Math.abs((b.minY + b.maxY) / 2)).toBeLessThan(1e-6);
+
+    const deviceCenterAfter = curve.transformPointToDevice(0, 0);
+    expect(deviceCenterAfter.x).toBeCloseTo(deviceCenterBefore.x);
+    expect(deviceCenterAfter.y).toBeCloseTo(deviceCenterBefore.y);
   });
 
   it("QuadraticBezier: JSON serialization", () => {
     const curve = new BezierQuadratic(-80, 0, 0, -100, 80, 0);
     const json = curve.toJSON();
 
-    expect(json.type).toBe("BezierQuadratic");
+    expect(json.type).toBe("quad");
     expect(json.x1).toBe(-80);
     expect(json.y1).toBe(0);
     expect(json.cx).toBe(0);
@@ -277,7 +300,7 @@ describe("Shapes - Serialization", () => {
     const curve = new BezierCubic(-100, 0, -50, -150, 50, 150, 100, 0);
     const json = curve.toJSON();
 
-    expect(json.type).toBe("BezierCubic");
+    expect(json.type).toBe("cubic");
     expect(json.x1).toBe(-100);
     expect(json.cx1).toBe(-50);
     expect(json.cx2).toBe(50);
@@ -296,10 +319,58 @@ describe("Shapes - Serialization", () => {
     );
     const json = path.toJSON();
 
-    expect(json.type).toBe("PathBezier");
+    expect(json.type).toBe("path");
     expect(json.points).toHaveLength(3);
     expect(json.mode).toBe("bezier");
     expect(json.closed).toBe(true);
+  });
+
+  it("Rect: round-trip via shapeFromJSON", () => {
+    const rect = new Rect(120, 80);
+    rect.transform.x = 50;
+    rect.transform.rotation = 0.5;
+    rect.fillStyle = "#ff0000";
+    rect.strokeWidth = 4;
+
+    const restored = shapeFromJSON(rect.toJSON());
+    expect(restored).not.toBeNull();
+    expect(restored!.transform.x).toBe(50);
+    expect(restored!.transform.rotation).toBe(0.5);
+    expect((restored as Rect).w).toBe(120);
+    expect(restored!.fillStyle).toBe("#ff0000");
+    expect(restored!.strokeWidth).toBe(4);
+  });
+
+  it("Triangle: round-trip via shapeFromJSON", () => {
+    const tri = new Triangle(0, -50, 50, 50, -50, 50);
+    tri.strokeStyle = "#00ff00";
+
+    const restored = shapeFromJSON(tri.toJSON()) as Triangle;
+    expect(restored).not.toBeNull();
+    expect(restored.strokeStyle).toBe("#00ff00");
+    expect(restored.hitTest(0, 0)).toBe(true);
+  });
+
+  it("PathBezier: round-trip via shapeFromJSON", () => {
+    const path = new PathBezier(
+      [
+        { x: 0, y: 0 },
+        { x: 50, y: 50 },
+        { x: 100, y: 0 },
+      ],
+      "bezier",
+      true
+    );
+
+    const restored = shapeFromJSON(path.toJSON()) as PathBezier;
+    expect(restored).not.toBeNull();
+    expect(restored.points).toHaveLength(3);
+    expect(restored.mode).toBe("bezier");
+    expect(restored.closed).toBe(true);
+  });
+
+  it("shapeFromJSON: unknown type returns null", () => {
+    expect(shapeFromJSON({ type: "unknown" })).toBeNull();
   });
 });
 

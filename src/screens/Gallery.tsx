@@ -2,7 +2,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 
-function Gallery({ projects, addProject }) {
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function Gallery({ projects, addProject }: {
+  projects: { id: number; name: string; createdAt: string; updatedAt: string }[];
+  addProject: (name: string) => Promise<void>;
+}) {
   const [name, setName] = useState("");
 
   return (
@@ -54,7 +67,7 @@ function Gallery({ projects, addProject }) {
             >
               <Link to={`/editor/${project.id}`} className="block">
                 <h3 className="text-xl">{project.name}</h3>
-                <p className="text-gray-400">Дата: {project.date}</p>
+                <p className="text-gray-400">Изменён: {formatDate(project.updatedAt)}</p>
               </Link>
             </motion.div>
           ))}

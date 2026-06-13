@@ -144,4 +144,39 @@ export class RasterRenderer {
     this.fillPolygon(pts, fill);
     this.strokePolygon(pts, stroke, width);
   }
+
+  fillCircle(cx: number, cy: number, radius: number, color: RGBA) {
+    this.ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${color.a / 255})`;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  strokeCircle(cx: number, cy: number, radius: number, color: RGBA, width: number) {
+    this.ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},${color.a / 255})`;
+    this.ctx.lineWidth = width;
+    this.ctx.beginPath();
+    this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    this.ctx.stroke();
+  }
+
+  strokePolyline(
+    pts: { x: number; y: number }[],
+    color: RGBA,
+    width: number,
+    dashed = false
+  ) {
+    if (pts.length < 2) return;
+    this.ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},${color.a / 255})`;
+    this.ctx.lineWidth = width;
+    if (dashed) this.ctx.setLineDash([6, 4]);
+    else this.ctx.setLineDash([]);
+    this.ctx.beginPath();
+    this.ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      this.ctx.lineTo(pts[i].x, pts[i].y);
+    }
+    this.ctx.stroke();
+    this.ctx.setLineDash([]);
+  }
 }

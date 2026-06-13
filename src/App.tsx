@@ -1,28 +1,48 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Editor from './screens/Editor';
 import Gallery from './screens/Gallery';
-
-interface Project {
-  id: number;
-  name: string;
-  date: string;
-}
+import {
+  addProjectToIndex,
+  loadProjectIndex,
+  ProjectIndexEntry,
+} from './lib/projectStorage';
 
 function App() {
-  const [projects, setProjects] = useState<Project[]>([
-    { id: 1, name: 'Новый проект', date: new Date().toLocaleDateString('ru-RU') },
-  ]);
+  const [projects, setProjects] = useState<ProjectIndexEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addProject = (name: string) => {
-    const newProject: Project = {
+  useEffect(() => {
+    loadProjectIndex()
+      .then(setProjects)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const addProject = async (name: string) => {
+    const now = new Date().toISOString();
+    const newProject: ProjectIndexEntry = {
       id: Date.now(),
-      name: name,
-      date: new Date().toLocaleDateString('ru-RU')
+      name,
+      createdAt: now,
+      updatedAt: now,
     };
 
-    setProjects(prev => [...prev, newProject]);
+    await addProjectToIndex(newProject);
+    setProjects((prev) => [...prev, newProject]);
   };
+
+  const refreshProjects = async () => {
+    const index = await loadProjectIndex();
+    setProjects(index);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        Загрузка проектов...
+      </div>
+    );
+  }
 
   return (
     <BrowserRouter>
@@ -32,8 +52,14 @@ function App() {
         </header>
         <main className="p-4">
           <Routes>
-            <Route path="/" element={<Gallery projects={projects} addProject={addProject} />} />
-            <Route path="/editor/:id" element={<Editor projects={projects} />} />
+            <Route
+              path="/"
+              element={<Gallery projects={projects} addProject={addProject} />}
+            />
+            <Route
+              path="/editor/:id"
+              element={<Editor projects={projects} onProjectSaved={refreshProjects} />}
+            />
           </Routes>
         </main>
       </div>

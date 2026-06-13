@@ -67,5 +67,23 @@ export abstract class Shape {
   abstract hitTest(px: number, py: number): boolean;
   abstract getBounds(): Bounds;
   abstract getLocalBounds(): Bounds;
-  abstract toJSON(): any;
+  abstract toJSON(): Record<string, unknown>;
+
+  protected baseToJSON(): Record<string, unknown> {
+    return {
+      id: this.id,
+      fillStyle: this.fillStyle,
+      fillOpacity: this.fillOpacity,
+      strokeStyle: this.strokeStyle,
+      strokeWidth: this.strokeWidth,
+      strokeOpacity: this.strokeOpacity,
+      transform: {
+        x: this.transform.x,
+        y: this.transform.y,
+        rotation: this.transform.rotation,
+        scaleX: this.transform.scaleX,
+        scaleY: this.transform.scaleY,
+      },
+    };
+  }
 }

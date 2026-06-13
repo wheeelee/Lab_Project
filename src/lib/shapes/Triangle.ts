@@ -90,13 +90,45 @@ export class Triangle extends Shape {
     return t;
   }
 
+  static fromSaved(data: {
+    a: Pt;
+    b: Pt;
+    c: Pt;
+    id?: string;
+    fillStyle?: string;
+    fillOpacity?: number;
+    strokeStyle?: string;
+    strokeWidth?: number;
+    strokeOpacity?: number;
+    transform?: { x: number; y: number; rotation: number; scaleX: number; scaleY: number };
+  }): Triangle {
+    const tri = new Triangle(0, 0, 1, 0, 0, 0);
+    tri.a = { ...data.a };
+    tri.b = { ...data.b };
+    tri.c = { ...data.c };
+    if (data.id) tri.id = data.id;
+    if (data.transform) {
+      tri.transform.x = data.transform.x;
+      tri.transform.y = data.transform.y;
+      tri.transform.rotation = data.transform.rotation;
+      tri.transform.scaleX = data.transform.scaleX;
+      tri.transform.scaleY = data.transform.scaleY;
+    }
+    if (data.fillStyle !== undefined) tri.fillStyle = data.fillStyle;
+    if (data.fillOpacity !== undefined) tri.fillOpacity = data.fillOpacity;
+    if (data.strokeStyle !== undefined) tri.strokeStyle = data.strokeStyle;
+    if (data.strokeWidth !== undefined) tri.strokeWidth = data.strokeWidth;
+    if (data.strokeOpacity !== undefined) tri.strokeOpacity = data.strokeOpacity;
+    return tri;
+  }
+
   toJSON() {
     return {
-      type: "Triangle",
+      type: "triangle",
       a: this.a,
       b: this.b,
       c: this.c,
-      transform: this.transform,
+      ...this.baseToJSON(),
     };
   }
 }

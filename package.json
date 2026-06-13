@@ -12,11 +12,12 @@
     "test:run": "vitest run",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,md,json,html}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,scss,md,json,html}\""
-
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-opener": "^2",
     "framer-motion": "^12.35.0",
     "lucide-react": "^0.577.0",

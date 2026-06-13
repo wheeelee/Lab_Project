@@ -224,15 +224,40 @@ export class PathBezier extends Shape {
   }
 
   // ----------------------------------------------------
+  // CONTROL POINT EDITING
+  // ----------------------------------------------------
+  getControlPoints(): Point[] {
+    return this.points.map((p) => ({ x: p.x, y: p.y }));
+  }
+
+  setControlPoint(index: number, pt: Point) {
+    if (index < 0 || index >= this.points.length) return;
+    this.points[index] = { x: pt.x, y: pt.y };
+  }
+
+  addPointLocal(pt: Point, index?: number) {
+    if (index === undefined || index >= this.points.length) {
+      this.points.push({ x: pt.x, y: pt.y });
+    } else {
+      this.points.splice(index, 0, { x: pt.x, y: pt.y });
+    }
+  }
+
+  removePoint(index: number) {
+    if (index < 0 || index >= this.points.length || this.points.length <= 1) return;
+    this.points.splice(index, 1);
+  }
+
+  // ----------------------------------------------------
   // SERIALIZATION
   // ----------------------------------------------------
   toJSON() {
     return {
-      type: "PathBezier",
+      type: "path",
       points: this.points,
       mode: this.mode,
       closed: this.closed,
-      transform: this.transform,
+      ...this.baseToJSON(),
     };
   }
 }

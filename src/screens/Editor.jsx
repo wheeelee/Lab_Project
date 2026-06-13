@@ -1,137 +1,161 @@
 import { motion } from "framer-motion";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import CanvasScene from "./CanvasScene";
 
-import { Rect } from "../lib/shapes/Rect";
-import { Oval } from "../lib/shapes/Oval";
-import { Triangle } from "../lib/shapes/Triangle";
-import { Line } from "../lib/shapes/Line";
-import { BezierCubic } from "../lib/shapes/BezierCubic";
-import { BezierQuadratic } from "../lib/shapes/BezierQuadratic";
-import { PathBezier } from "../lib/shapes/PathBezier";
+import { EditorInteraction, moveLayer, deleteShape } from "../lib/editor/interaction";
+import { createShape } from "../lib/editor/shapeFactory";
+import { getShapeLabel } from "../lib/editor/shapeNames";
+import { loadProject, restoreShapes, saveProject } from "../lib/projectStorage";
 
 const LineAlg = {
   BRESENHAM: "bresenham",
   WU: "wu",
 };
 
-function Editor({ projects }) {
+const TOOLS = [
+  { id: "select", label: "Выбор", title: "Выбор и перемещение" },
+  { id: "rect", label: "□", title: "Прямоугольник" },
+  { id: "oval", label: "○", title: "Овал" },
+  { id: "triangle", label: "△", title: "Треугольник" },
+  { id: "line", label: "╱", title: "Линия" },
+  { id: "bezierQuad", label: "⌒", title: "Квадр. кривая" },
+  { id: "bezierCubic", label: "∿", title: "Куб. кривая" },
+  { id: "path", label: "✎", title: "Путь" },
+];
+
+function Editor({ projects, onProjectSaved }) {
   const { id } = useParams();
   const project = projects.find((p) => p.id === Number(id));
 
   const [alg, setAlg] = useState(LineAlg.BRESENHAM);
+  const [shapes, setShapes] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [activeTool, setActiveTool] = useState("select");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
 
-  const shapes = useMemo(() => {
-    const rect = new Rect(150, 100);
-    rect.transform.x = 150;
-    rect.transform.y = 100;
-    rect.transform.rotation = Math.PI / 12;
-    rect.fillStyle = "#3b82f6";
-    rect.fillOpacity = 0.8;
+  const shapesRef = useRef(shapes);
+  const selectedRef = useRef(selectedId);
+  const activeToolRef = useRef(activeTool);
+  shapesRef.current = shapes;
+  selectedRef.current = selectedId;
+  activeToolRef.current = activeTool;
 
-    const oval = new Oval(120, 80);
-    oval.transform.x = 650;
-    oval.transform.y = 100;
-    oval.fillStyle = "#fbbf24";
-    oval.fillOpacity = 0.8;
-
-    const triangle = new Triangle(0, -70, 80, 70, -80, 70);
-    triangle.transform.x = 180;
-    triangle.transform.y = 500;
-    triangle.fillStyle = "#10b981";
-    triangle.strokeStyle = "#064e3b";
-    triangle.strokeWidth = 3;
-
-    const line = new Line(-100, -80, 100, 80);
-    line.transform.x = 700;
-    line.transform.y = 500;
-    line.strokeStyle = "#f59e0b";
-    line.strokeWidth = 4;
-
-    const bezier = new BezierQuadratic(-120, 0, 0, -170, 120, 0);
-    bezier.transform.x = 430;
-    bezier.transform.y = 200;
-    bezier.strokeStyle = "#3b82f6";
-    bezier.strokeWidth = 3;
-
-    const line2 = new Line(-120, 0, 120, 0);
-    line2.transform.x = 860;
-    line2.transform.y = 400;
-    line2.strokeStyle = "#3b82f6";
-    line2.strokeWidth = 3;
-
-    const cubic = new BezierCubic(
-      -120, 0,
-      -60, 140,
-      60, -140,
-      120, 0
-    );
-    cubic.transform.x = 430;
-    cubic.transform.y = 380;
-    cubic.strokeStyle = "#f97335";
-    cubic.strokeWidth = 3;
-
-    const path = new PathBezier(
-      [
-        { x: -100, y: 0 },
-        { x: -45, y: -92 },
-        { x: 0, y: -8 },
-        { x: 45, y: 94 },
-        { x: 100, y: 0 },
-      ],
-      "bezier",
-      true
-    );
-    path.transform.x = 200;
-    path.transform.y = 380;
-    path.strokeStyle = "#22c55e";
-    path.strokeWidth = 3;
-    path.fillStyle = "#22c55e33";
-    path.fillOpacity = 0.3;
-
-    // ИЗМЕНЕННАЯ ФИГУРА С КАРТИНКИ
-    const tripleLobed = new PathBezier(
-      [
-        { x: -290, y: -10 },    // 1. Старт из левого закругления горизонтальной линии
-
-        { x: -200, y: -80 },   // 5. Control: направляем линию почти вертикально вниз
-                { x: -250, y: -80 },   // 5. Control: направляем линию почти вертикально вниз
-
-        { x: 100, y: 150 },   // 8. Control: вытягиваем нижнюю петлю вправо-вверх
-        { x: 20, y: -90 },    // 9. Control: создаем верхний «горб» перед уходом вправо
-        { x: 180, y: 15 },    // 11. Control: делаем резкий разворот обратно влево
-      ],
-      "catmull",
-      true
-    );
-    tripleLobed.transform.x = 500;
-    tripleLobed.transform.y = 250;
-    tripleLobed.strokeStyle = "#ec4899";
-    tripleLobed.strokeWidth = 2;
-    tripleLobed.fillStyle = "#ec489922";
-    tripleLobed.fillOpacity = 0.2;
-
-    return [
-      rect,
-      oval,
-      triangle,
-      line,
-      bezier,
-      line2,
-      cubic,
-      path,
-      tripleLobed,
-    ];
+  const bumpShapes = useCallback(() => {
+    setShapes((prev) => [...prev]);
   }, []);
+
+  const interaction = useMemo(
+    () =>
+      new EditorInteraction({
+        getShapes: () => shapesRef.current,
+        getSelectedId: () => selectedRef.current,
+        onSelectionChange: (sid) => setSelectedId(sid),
+        onShapesChange: bumpShapes,
+      }),
+    [bumpShapes]
+  );
+
+  const handleCreateShape = useCallback((x, y) => {
+    const tool = activeToolRef.current;
+    if (tool === "select") return;
+    const shape = createShape(tool, x, y);
+    if (!shape) return;
+    setShapes((prev) => [...prev, shape]);
+    setSelectedId(shape.id);
+    setActiveTool("select");
+  }, []);
+
+  const handleDelete = useCallback(() => {
+    if (!selectedId) return;
+    setShapes((prev) => deleteShape(prev, selectedId));
+    setSelectedId(null);
+  }, [selectedId]);
+
+  const handleLayerMove = useCallback(
+    (direction) => {
+      if (!selectedId) return;
+      setShapes((prev) => moveLayer(prev, selectedId, direction));
+    },
+    [selectedId]
+  );
+
+  useEffect(() => {
+    if (!project) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    loadProject(project.id).then((data) => {
+      if (cancelled) return;
+      if (data) {
+        setShapes(restoreShapes(data));
+        setAlg(data.lineAlg ?? LineAlg.BRESENHAM);
+      } else {
+        setShapes([]);
+        setAlg(LineAlg.BRESENHAM);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project?.id]);
+
+  const handleSave = useCallback(async () => {
+    if (!project || saving) return;
+
+    setSaving(true);
+    setSaveMessage("");
+    try {
+      await saveProject(project.id, project.name, alg, shapes, project.createdAt);
+      await onProjectSaved?.();
+      setSaveMessage("Сохранено");
+      setTimeout(() => setSaveMessage(""), 2000);
+    } catch (err) {
+      console.error(err);
+      setSaveMessage("Ошибка сохранения");
+    } finally {
+      setSaving(false);
+    }
+  }, [project, alg, shapes, saving, onProjectSaved]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (e.target instanceof HTMLInputElement) return;
+        e.preventDefault();
+        handleDelete();
+      }
+      if (e.key === "]" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleLayerMove(e.shiftKey ? "top" : "up");
+      }
+      if (e.key === "[" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleLayerMove(e.shiftKey ? "bottom" : "down");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleDelete, handleLayerMove]);
 
   if (!project) {
     return <div className="text-white p-4">Проект не найден</div>;
   }
 
+  if (loading) {
+    return <div className="text-white p-4">Загрузка проекта...</div>;
+  }
+
+  const reversedLayers = [...shapes].reverse();
+
   return (
     <div className="h-screen flex flex-col bg-slate-800 text-black">
-      <header className="h-14 border-b flex items-center bg-slate-800 px-2 sm:px-4">
+      <header className="h-14 border-b flex items-center bg-slate-800 px-2 sm:px-4 shrink-0">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Link
             to="/"
@@ -142,22 +166,36 @@ function Editor({ projects }) {
         </motion.div>
 
         <span className="font-bold px-2 sm:px-4 text-white text-lg sm:text-2xl truncate">
-          Название проекта: {project.name}
+          {project.name}
         </span>
 
-        <div className="flex gap-2 ml-auto mr-4">
+        <div className="flex gap-1 ml-4">
+          {TOOLS.map((t) => (
+            <motion.button
+              key={t.id}
+              title={t.title}
+              onClick={() => setActiveTool(t.id)}
+              className={`px-2 py-1 rounded text-white text-sm min-w-8 ${
+                activeTool === t.id ? "bg-blue-500" : "bg-slate-600 hover:bg-slate-500"
+              }`}
+            >
+              {t.label}
+            </motion.button>
+          ))}
+        </div>
+
+        <div className="flex gap-2 ml-auto mr-2">
           <motion.button
             onClick={() => setAlg(LineAlg.BRESENHAM)}
-            className={`px-4 py-2 rounded text-white ${
+            className={`px-3 py-1 rounded text-white text-sm ${
               alg === LineAlg.BRESENHAM ? "bg-blue-500" : "bg-slate-600"
             }`}
           >
             Bresenham
           </motion.button>
-
           <motion.button
             onClick={() => setAlg(LineAlg.WU)}
-            className={`px-4 py-2 rounded text-white ${
+            className={`px-3 py-1 rounded text-white text-sm ${
               alg === LineAlg.WU ? "bg-blue-500" : "bg-slate-600"
             }`}
           >
@@ -165,14 +203,104 @@ function Editor({ projects }) {
           </motion.button>
         </div>
 
-        <motion.div className="font-bold px-4 py-2 text-white bg-green-600 rounded">
-          Сохранить
-        </motion.div>
+        <motion.button
+          onClick={handleDelete}
+          disabled={!selectedId}
+          className={`font-bold px-3 py-1 text-white rounded text-sm mr-2 ${
+            selectedId ? "bg-red-600 hover:bg-red-500" : "bg-slate-600 opacity-50"
+          }`}
+        >
+          Удалить
+        </motion.button>
+
+        <motion.button
+          onClick={handleSave}
+          disabled={saving}
+          className={`font-bold px-3 py-1 text-white rounded text-sm ${
+            saving ? "bg-green-800 opacity-70" : "bg-green-600 hover:bg-green-500"
+          }`}
+        >
+          {saving ? "Сохранение..." : "Сохранить"}
+        </motion.button>
+        {saveMessage && (
+          <span className="text-white text-sm ml-2">{saveMessage}</span>
+        )}
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 bg-white rounded min-w-0">
-          <CanvasScene lineAlg={alg} shapes={shapes} />
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        <aside className="w-52 bg-slate-700 text-white flex flex-col shrink-0 border-r border-slate-600">
+          <div className="px-3 py-2 font-semibold text-sm border-b border-slate-600">
+            Слои
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {reversedLayers.map((shape, i) => {
+              const isSelected = shape.id === selectedId;
+              return (
+                <button
+                  key={shape.id}
+                  onClick={() => setSelectedId(shape.id)}
+                  className={`w-full text-left px-3 py-2 text-sm border-b border-slate-600/50 truncate ${
+                    isSelected
+                      ? "bg-blue-600"
+                      : "hover:bg-slate-600"
+                  }`}
+                >
+                  <span className="text-slate-400 mr-1">{shapes.length - i}.</span>
+                  {getShapeLabel(shape)}
+                </button>
+              );
+            })}
+          </div>
+          <div className="px-2 py-1 text-[10px] text-slate-400 border-t border-slate-600 leading-tight">
+            Кривые: зелёные — якоря, фиолетовые — контрольные.
+            Путь: Alt+клик — точка, Shift+клик по точке — удалить.
+          </div>
+          <div className="p-2 border-t border-slate-600 flex flex-col gap-1">
+            <button
+              disabled={!selectedId}
+              onClick={() => handleLayerMove("up")}
+              className="px-2 py-1 text-xs bg-slate-600 rounded disabled:opacity-40 hover:bg-slate-500"
+            >
+              ↑ Выше
+            </button>
+            <button
+              disabled={!selectedId}
+              onClick={() => handleLayerMove("down")}
+              className="px-2 py-1 text-xs bg-slate-600 rounded disabled:opacity-40 hover:bg-slate-500"
+            >
+              ↓ Ниже
+            </button>
+            <button
+              disabled={!selectedId}
+              onClick={() => handleLayerMove("top")}
+              className="px-2 py-1 text-xs bg-slate-600 rounded disabled:opacity-40 hover:bg-slate-500"
+            >
+              ⇈ На верх
+            </button>
+            <button
+              disabled={!selectedId}
+              onClick={() => handleLayerMove("bottom")}
+              className="px-2 py-1 text-xs bg-slate-600 rounded disabled:opacity-40 hover:bg-slate-500"
+            >
+              ⇊ Вниз
+            </button>
+          </div>
+        </aside>
+
+        <main className="flex-1 bg-white rounded min-w-0 relative">
+          {activeTool !== "select" && (
+            <div className="absolute top-2 left-2 z-10 bg-blue-600 text-white text-xs px-2 py-1 rounded pointer-events-none">
+              Кликните на холст, чтобы создать объект
+            </div>
+          )}
+          <CanvasScene
+            lineAlg={alg}
+            shapes={shapes}
+            selectedId={selectedId}
+            interaction={interaction}
+            interactionEnabled={activeTool === "select"}
+            onCreateShape={handleCreateShape}
+          />
         </main>
       </div>
     </div>

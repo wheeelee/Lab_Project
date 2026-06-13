@@ -65,10 +65,10 @@ export class Oval extends Shape {
 
   toJSON() {
     return {
-      type: "Oval",
+      type: "oval",
       rx: this.rx,
       ry: this.ry,
-      transform: this.transform,
+      ...this.baseToJSON(),
     };
   }
 }
